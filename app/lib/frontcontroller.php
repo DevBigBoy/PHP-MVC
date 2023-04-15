@@ -4,9 +4,16 @@ namespace PHPMVC\LIB;
 
 class FrontController
 {
+    const NOT_FOUND_ACTION = 'NotFoundAction';
+    const NOT_FOUND_CONTROLLER = 'PHPMVC\Controllers\\NotFoundController';
     private $_controller = 'index';
     private $_action = 'default';
     private $_params = [];
+
+    public function __construct()
+    {
+        $this->_parseUrl();
+    }
 
 
     private function _parseUrl()
@@ -25,13 +32,25 @@ class FrontController
         // @list($this->_controller, $this->_action, $this->_params) = explode('/', trim($url, '/'), 3);
         // $this->_params = explode('/', $this->_params ?? '');
 
-        echo '<pre>';
-        var_dump($this);
-        echo '</pre>';
+        // return $this;
     }
 
     public function dispatch()
     {
-        $this->_parseUrl();
+        $controllerClassName = 'PHPMVC\Controllers\\' . ucfirst($this->_controller) . 'Controller';
+        $actionName = $this->_action . 'Action';
+        if (!class_exists($controllerClassName)) {
+            $controllerClassName = self::NOT_FOUND_CONTROLLER;
+        }
+        $controller = new $controllerClassName();
+
+        if (!method_exists($controller, $actionName)) {
+            $this->_action =  $actionName = self::NOT_FOUND_ACTION;
+        }
+
+        $controller->setController($this->_controller);
+        $controller->setAction($this->_action);
+        $controller->setParams($this->_params);
+        $controller->$actionName();
     }
 }
